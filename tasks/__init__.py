@@ -67,10 +67,10 @@ def server(host=None, port=5000, debug=True, live=False):
 
 
 @task
-def apiserver(port=8000, wait=True):
+def apiserver(port=8000, wait=True, host='0.0.0.0'):
     """Run the API server."""
     env = os.environ.copy()
-    cmd = 'DJANGO_SETTINGS_MODULE=api.base.settings {} manage.py runserver {} --nothreading'.format(sys.executable, port)
+    cmd = 'DJANGO_SETTINGS_MODULE=api.base.settings {} manage.py runserver {}:{} --nothreading'.format(sys.executable, host, port)
     if wait:
         return run(cmd, echo=True, pty=True)
     from subprocess import Popen
