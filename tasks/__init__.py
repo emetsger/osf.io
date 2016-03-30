@@ -79,10 +79,10 @@ def apiserver(port=8000, wait=True, host='0.0.0.0'):
 
 
 @task
-def adminserver(port=8001):
+def adminserver(port=8001, host='0.0.0.0'):
     """Run the Admin server."""
     env = 'DJANGO_SETTINGS_MODULE="admin.base.settings"'
-    cmd = '{} python manage.py runserver {} --nothreading'.format(env, port)
+    cmd = '{} python manage.py runserver {}:{} --nothreading'.format(env, host, port)
     run(cmd, echo=True, pty=True)
 
 
