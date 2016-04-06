@@ -18,6 +18,7 @@ SECRET_KEY = osf_settings.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = osf_settings.DEBUG_MODE
+DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = [
     '.osf.io'
@@ -45,6 +46,7 @@ INSTALLED_APPS = (
     # 3rd party
     'raven.contrib.django.raven_compat',
     'webpack_loader',
+    'django_nose',
     'ckeditor',
 )
 
@@ -143,6 +145,9 @@ WEBPACK_LOADER = {
         'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
     }
 }
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = ['--verbosity=2']
 
 CKEDITOR_CONFIGS = {
     'default': {
