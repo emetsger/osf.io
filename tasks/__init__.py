@@ -67,7 +67,7 @@ def server(host=None, port=5000, debug=True, live=False):
 
 
 @task
-def apiserver(port=8000, wait=True, host='0.0.0.0'):
+def apiserver(port=8000, wait=True, host='127.0.0.1'):
     """Run the API server."""
     env = os.environ.copy()
     cmd = 'DJANGO_SETTINGS_MODULE=api.base.settings {} manage.py runserver {}:{} --nothreading'.format(sys.executable, host, port)
@@ -79,7 +79,7 @@ def apiserver(port=8000, wait=True, host='0.0.0.0'):
 
 
 @task
-def adminserver(port=8001, host='0.0.0.0'):
+def adminserver(port=8001, host='127.0.0.1'):
     """Run the Admin server."""
     env = 'DJANGO_SETTINGS_MODULE="admin.base.settings"'
     cmd = '{} python manage.py runserver {}:{} --nothreading'.format(env, host, port)
