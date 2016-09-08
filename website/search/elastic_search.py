@@ -59,22 +59,33 @@ INDEX = settings.ELASTIC_INDEX
 
 try:
     es = Elasticsearch(
-        settings.ELASTIC_URI,
-        request_timeout=settings.ELASTIC_TIMEOUT,
-        max_retries=settings.ELASTIC_MAX_RETRIES,
-        sniffer_timeout=settings.ELASTIC_SNIFF_TIMEOUT,
-        retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES)
+            settings.ELASTIC_URI,
+            request_timeout=settings.ELASTIC_TIMEOUT,
+            max_retries=settings.ELASTIC_MAX_RETRIES,
+            retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES)
     )
     logging.getLogger('elasticsearch').setLevel(logging.WARN)
     logging.getLogger('elasticsearch.trace').setLevel(logging.WARN)
     logging.getLogger('urllib3').setLevel(logging.WARN)
     logging.getLogger('requests').setLevel(logging.WARN)
-    sentry.log_message("Pinging elasticsearch ...")
-    if es.ping():
-        sentry.log_message("Elasticsearch is up!")
+
+    if settings.ELASTIC_MAX_RETRIES < 1:
+        es.cluster.health(wait_for_status='yellow')
     else:
-        sentry.log_message("Elasticsearch ping failed!")
-    es.cluster.health(wait_for_status='yellow', request_timeout=settings.ELASTIC_TIMEOUT, retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES))
+        ex = None
+        success = False
+        retry = 1
+        while (retry <= settings.ELASTIC_MAX_RETRIES) and not success:
+            try:
+                success = es.cluster.health(wait_for_status='yellow') is not None
+            except Exception as e:
+                ex = e
+                backoff = settings.ELASTIC_BACKOFF_FACTOR * settings.ELASTIC_TIMEOUT * retry
+                sentry.log_message("Error connecting to Elasticsearch, trying again in {0} seconds.".format(backoff))
+                retry+=1
+        if not success:
+            raise ex
+
 except ConnectionError as e:
     message = (
         'The SEARCH_ENGINE setting is set to "elastic", but there '
