@@ -81,6 +81,7 @@ SEARCH_ENGINE = 'elastic'  # Can be 'elastic', or None
 ELASTIC_URI = 'localhost:9200'
 ELASTIC_TIMEOUT = 10
 ELASTIC_INDEX = 'website'
+ELASTIC_MAX_RETRIES = 3
 SHARE_ELASTIC_URI = ELASTIC_URI
 SHARE_ELASTIC_INDEX = 'share'
 # For old indices
