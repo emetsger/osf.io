@@ -69,7 +69,12 @@ try:
     logging.getLogger('elasticsearch.trace').setLevel(logging.WARN)
     logging.getLogger('urllib3').setLevel(logging.WARN)
     logging.getLogger('requests').setLevel(logging.WARN)
-    es.cluster.health(wait_for_status='yellow', request_timeout=settings.ELASTIC_TIMEOUT)
+    sentry.log_message("Pinging elasticsearch ...")
+    if es.ping():
+        sentry.log_message("Elasticsearch is up!")
+    else:
+        sentry.log_message("Elasticsearch ping failed!")
+    es.cluster.health(wait_for_status='yellow', request_timeout=settings.ELASTIC_TIMEOUT, retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES))
 except ConnectionError as e:
     message = (
         'The SEARCH_ENGINE setting is set to "elastic", but there '
