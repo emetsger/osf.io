@@ -59,7 +59,8 @@ try:
     es = Elasticsearch(
         settings.ELASTIC_URI,
         request_timeout=settings.ELASTIC_TIMEOUT,
-        max_retries=settings.ELASTIC_MAX_RETRIES
+        max_retries=settings.ELASTIC_MAX_RETRIES,
+        sniffer_timeout=settings.ELASTIC_SNIFF_TIMEOUT
     )
     logging.getLogger('elasticsearch').setLevel(logging.WARN)
     logging.getLogger('elasticsearch.trace').setLevel(logging.WARN)
