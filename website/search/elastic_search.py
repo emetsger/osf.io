@@ -24,7 +24,7 @@ from framework import sentry
 from framework.celery_tasks import app as celery_app
 from framework.mongo.utils import paginated
 
-from urllib3.util import Retry
+from time import sleep
 
 from website import settings
 from website.filters import gravatar
@@ -61,13 +61,14 @@ try:
     es = Elasticsearch(
             settings.ELASTIC_URI,
             request_timeout=settings.ELASTIC_TIMEOUT,
-            max_retries=settings.ELASTIC_MAX_RETRIES,
-            retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES)
+            max_retries=settings.ELASTIC_MAX_RETRIES
     )
     logging.getLogger('elasticsearch').setLevel(logging.WARN)
     logging.getLogger('elasticsearch.trace').setLevel(logging.WARN)
     logging.getLogger('urllib3').setLevel(logging.WARN)
     logging.getLogger('requests').setLevel(logging.WARN)
+
+    logging.getLogger('elasticsearch').log(logging.WARN, "Elasticsearch retries {0} and backoff factor {1}".format(settings.ELASTIC_MAX_RETRIES, settings.ELASTIC_BACKOFF_FACTOR))
 
     if settings.ELASTIC_MAX_RETRIES < 1:
         es.cluster.health(wait_for_status='yellow')
@@ -81,7 +82,8 @@ try:
             except Exception as e:
                 ex = e
                 backoff = settings.ELASTIC_BACKOFF_FACTOR * settings.ELASTIC_TIMEOUT * retry
-                sentry.log_message("Error connecting to Elasticsearch, trying again in {0} seconds.".format(backoff))
+                logging.getLogger('elasticsearch').log(logging.WARN, "Error connecting to Elasticsearch, trying again in {0} seconds.".format(backoff))
+                sleep(backoff)
                 retry += 1
         if not success:
             raise ex
