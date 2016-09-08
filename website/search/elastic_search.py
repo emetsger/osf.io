@@ -24,6 +24,8 @@ from framework import sentry
 from framework.celery_tasks import app as celery_app
 from framework.mongo.utils import paginated
 
+from urllib3.util import Retry
+
 from website import settings
 from website.filters import gravatar
 from website.models import User, Node
@@ -60,7 +62,8 @@ try:
         settings.ELASTIC_URI,
         request_timeout=settings.ELASTIC_TIMEOUT,
         max_retries=settings.ELASTIC_MAX_RETRIES,
-        sniffer_timeout=settings.ELASTIC_SNIFF_TIMEOUT
+        sniffer_timeout=settings.ELASTIC_SNIFF_TIMEOUT,
+        retries=Retry(backoff_factor=10, total=settings.ELASTIC_MAX_RETRIES)
     )
     logging.getLogger('elasticsearch').setLevel(logging.WARN)
     logging.getLogger('elasticsearch.trace').setLevel(logging.WARN)
