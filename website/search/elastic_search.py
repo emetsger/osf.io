@@ -70,11 +70,11 @@ try:
 
     logging.getLogger('elasticsearch').log(logging.WARN, "Elasticsearch retries {0} and backoff factor {1}".format(settings.ELASTIC_MAX_RETRIES, settings.ELASTIC_BACKOFF_FACTOR))
 
+    success = False
     if settings.ELASTIC_MAX_RETRIES < 1:
-        es.cluster.health(wait_for_status='yellow')
+        success = es.cluster.health(wait_for_status='yellow') is not None
     else:
         ex = None
-        success = False
         retry = 1
         while (retry <= settings.ELASTIC_MAX_RETRIES) and not success:
             try:
@@ -88,6 +88,10 @@ try:
         if not success:
             raise ex
 
+    if success:
+        logging.getLogger('elasticsearch').log(logging.WARN, "Successfully connected to Elasticsearch!")
+    else:
+        logging.getLogger('elasticsearch').log(logging.WARN, "Unable to connect to Elasticsearch!")
 except ConnectionError as e:
     message = (
         'The SEARCH_ENGINE setting is set to "elastic", but there '
