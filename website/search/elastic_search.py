@@ -82,7 +82,7 @@ try:
                 ex = e
                 backoff = settings.ELASTIC_BACKOFF_FACTOR * settings.ELASTIC_TIMEOUT * retry
                 sentry.log_message("Error connecting to Elasticsearch, trying again in {0} seconds.".format(backoff))
-                retry+=1
+                retry += 1
         if not success:
             raise ex
 
