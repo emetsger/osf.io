@@ -68,30 +68,27 @@ try:
     logging.getLogger('urllib3').setLevel(logging.WARN)
     logging.getLogger('requests').setLevel(logging.WARN)
 
-    logging.getLogger('elasticsearch').log(logging.WARN, "Elasticsearch retries {0} and backoff factor {1}".format(settings.ELASTIC_MAX_RETRIES, settings.ELASTIC_BACKOFF_FACTOR))
-
-    success = False
     if settings.ELASTIC_MAX_RETRIES < 1:
-        success = es.cluster.health(wait_for_status='yellow') is not None
+        es.cluster.health(wait_for_status='yellow')
     else:
+        connect_success = False
         ex = None
-        retry = 1
-        while (retry <= settings.ELASTIC_MAX_RETRIES) and not success:
+        connect_attempt = 1
+        while (connect_attempt <= settings.ELASTIC_MAX_RETRIES) and not connect_success:
             try:
-                success = es.cluster.health(wait_for_status='yellow') is not None
+                connect_success = es.cluster.health(wait_for_status='yellow') is not None
             except Exception as e:
                 ex = e
-                backoff = settings.ELASTIC_BACKOFF_FACTOR * settings.ELASTIC_TIMEOUT * retry
-                logging.getLogger('elasticsearch').log(logging.WARN, "Error connecting to Elasticsearch, trying again in {0} seconds.".format(backoff))
-                sleep(backoff)
-                retry += 1
-        if not success:
+                connect_backoff = settings.ELASTIC_BACKOFF_FACTOR * settings.ELASTIC_TIMEOUT * connect_attempt
+                logging.getLogger('elasticsearch') \
+                    .log(logging.WARN,
+                         "Error connecting to Elasticsearch, trying again in {0} seconds.".format(connect_backoff))
+                sleep(connect_backoff)
+                connect_attempt += 1
+        if not connect_success:
+            es = None
             raise ex
 
-    if success:
-        logging.getLogger('elasticsearch').log(logging.WARN, "Successfully connected to Elasticsearch!")
-    else:
-        logging.getLogger('elasticsearch').log(logging.WARN, "Unable to connect to Elasticsearch!")
 except ConnectionError as e:
     message = (
         'The SEARCH_ENGINE setting is set to "elastic", but there '
